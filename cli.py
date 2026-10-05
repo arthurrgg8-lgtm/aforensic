@@ -280,9 +280,18 @@ def run_pipeline(mode: str = "full",
         adb.pull_path("/sdcard/DCIM/Camera", os.path.join(raw_dir, "DCIM"))
         artifacts["photos"] = photos_parser.extract_from_device(raw_dir)
 
-        # M. Audio Recordings
+        # M. Audio Recordings (Cross-OEM: Samsung, Xiaomi/MIUI, Vivo, Oppo, Tecno, Pixel)
         rec_parser = RecordingsParser(adb)
-        adb.pull_path("/sdcard/Recordings", os.path.join(raw_dir, "Recordings"))
+        oem_rec_dirs = [
+            ("/sdcard/Recordings", "Recordings"),
+            ("/sdcard/Voice Recorder", "Voice_Recorder_Samsung"),
+            ("/sdcard/MIUI/sound_recorder", "MIUI_Recorder_Xiaomi"),
+            ("/sdcard/Record", "Record_Vivo"),
+            ("/sdcard/SoundRecorder", "SoundRecorder_Transsion"),
+            ("/sdcard/Sounds", "Sounds_Pixel")
+        ]
+        for src_path, dst_folder in oem_rec_dirs:
+            adb.pull_path(src_path, os.path.join(raw_dir, dst_folder))
         artifacts["recordings"] = rec_parser.extract_from_device(raw_dir)
 
     # 6. SQLite Freelist & WAL Unallocated Deep Carve

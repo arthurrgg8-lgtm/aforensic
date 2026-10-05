@@ -1,16 +1,25 @@
+"""
+Audio Recordings and Voice Memos Parser for aforensic.
+Extracts native call recordings and voice memos across all Android OEMs:
+- Samsung (Voice Recorder, Recordings)
+- Xiaomi / Redmi / POCO (MIUI sound_recorder, call_rec)
+- Oppo / Realme / OnePlus (Recordings)
+- Vivo / iQOO (Record/Call, Record/Voice)
+- Transsion / Tecno / Infinix (SoundRecorder)
+- Google Pixel / Motorola (Recorder, Sounds)
+"""
+
 import os
+from typing import List, Dict, Any, Optional
 from core.time_utils import unix_to_datetime, format_datetime_utc, format_datetime_local
 
-class RecordingsParser:
-    """
-    Parses Android Voice Memos, Sound Recorder audio files, and native Call Recordings.
-    """
 
+class RecordingsParser:
     AUDIO_EXTS = {'.m4a', '.opus', '.aac', '.wav', '.amr', '.mp3', '.ogg', '.3gp'}
 
-    def __init__(self, recordings_dir=None, contacts_parser=None):
+    def __init__(self, adb_manager=None, recordings_dir: Optional[str] = None):
+        self.adb = adb_manager
         self.recordings_dir = recordings_dir
-        self.contacts_parser = contacts_parser
         self.results = {
             "voice_memos": [],
             "call_recordings": [],
@@ -18,11 +27,12 @@ class RecordingsParser:
             "total_audio_artifacts": 0
         }
 
-    def parse(self):
-        if not self.recordings_dir or not os.path.exists(self.recordings_dir):
+    def parse(self, directory: Optional[str] = None) -> Dict[str, Any]:
+        target_dir = directory or self.recordings_dir
+        if not target_dir or not os.path.exists(target_dir):
             return self.results
 
-        for root, _, files in os.walk(self.recordings_dir):
+        for root, _, files in os.walk(target_dir):
             for f in files:
                 ext = os.path.splitext(f)[1].lower()
                 if ext in self.AUDIO_EXTS:
@@ -52,3 +62,10 @@ class RecordingsParser:
 
         self.results["total_audio_artifacts"] = len(self.results["carved_audio_files"])
         return self.results
+
+    def extract_from_device(self, raw_dir: str) -> List[Dict[str, Any]]:
+        """
+        Parses all audio recordings pulled into the raw staging directory.
+        """
+        parsed = self.parse(raw_dir)
+        return parsed.get("carved_audio_files", [])
