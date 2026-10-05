@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aforensic"
+version = "1.0.0"
+description = "Enterprise Android Digital Forensics Acquisition & Artifact Decoding Suite"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "rich>=13.0.0",
+    "python-docx>=1.0.0",
+    "cryptography>=3.4.0",
+]
+
+[project.scripts]
+aforensic = "cli:main"
